@@ -25,18 +25,18 @@ jobs:
 
       # Nouveau pas pour vérifier les vulnérabilités
       - name: Vérifier les dépendances vulnérables
-        shell : bash
+        shell: bash
         run: |
-          # Exécute la vérification des vulnérabilités et capture le code de sortie
-          # La commande retourne un code non nul si des vulnérabilités sont trouvées.
-          dotnet list package --vulnerable --include-transitive
-          exit_code=$?
+          # Exécute la vérification et capture la sortie
+          dotnet list package --vulnerable --include-transitive > vuln.txt
 
-          # Vérifie le code de sortie
-          if [ $exit_code -ne 0 ]; then
-            echo "❌ Des dépendances vulnérables ont été détectées (ou la commande a échoué)."
-            # La sortie de la commande dotnet list est déjà affichée ci-dessus.
-            exit $exit_code
+          # Affiche toujours le résultat pour debug
+          cat vuln.txt
+
+          # Si on trouve "vulnerable packages" (insensible à la casse), on échoue
+          if grep -iq "vulnerable packages" vuln.txt; then
+            echo "❌ Des dépendances vulnérables ont été détectées :"
+            exit 1
           else
             echo "✅ Aucune dépendance vulnérable détectée."
           fi
