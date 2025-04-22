@@ -38,6 +38,11 @@ jobs:
           else
             emoji="⛈️"
             message="Des tests ont échoué !"
+
+            # À chaque échec, avec probabilité ~50%, un message alien
+            if [ $((RANDOM % 2)) -eq 0 ]; then
+              echo "👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?"
+            fi
           fi
 
           # Affiche emoji + message
