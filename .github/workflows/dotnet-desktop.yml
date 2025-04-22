@@ -1,34 +1,33 @@
-name: .NET CI
+name: .NET CI amélioré
 
 on: [push, pull_request]
 
 jobs:
-  # Vérifie que le message de commit contient un emoji spatial (🚀, 🛸 ou 🪐)
-  commit-check:
+  # 1. Vérification du commit
+  check-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      - name: Le commit du cosmonaute
+      - name: Vérifier le message de commit
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          if echo "$COMMIT_MSG" | grep -q -E '(🚀|🛸|🪐)'; then
-            echo "Emoji spatial trouvé dans le message de commit!"
-          else
-            echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
+          # Récupère le message du dernier commit
+          MSG="$(git log -1 --pretty=%B)"
+          echo "Message de commit : $MSG"
+          # Cherche un emoji spatial
+          if ! echo "$MSG" | grep -qE '🚀|👽|🪐'; then
+            echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀,👽,🪐)."
             exit 1
           fi
 
-  build:
+  # 2. Build & Test .NET
+  build-and-test:
+    needs: check-commit
     runs-on: windows-latest
-    needs: commit-check
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 7.0.x
-      # Met en cache les packages NuGet pour accélérer les builds suivants
       - name: Cache NuGet packages
         uses: actions/cache@v3
         with:
@@ -37,49 +36,63 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - run: dotnet restore
-      - name: Test
-        id: run-tests
-        run: dotnet test
-        continue-on-error: true
-      # Envoie un GIF de soleil ☀️ ou d'orage ⚡ à Slack selon le résultat des tests
-      - name: La météo des tests - Succès
-        if: steps.run-tests.outcome == 'success'
-        uses: slackapi/slack-github-action@v1.24.0
+      - name: Lancer les tests
+        id: run_tests
+        run: dotnet test --logger:"trx;LogFileName=test_results.trx"
+      # Expose le statut du job pour les étapes suivantes
+      - name: Définir le statut
+        if: ${{ always() }}
+        run: |
+          echo "status=${{ job.status }}" >> $GITHUB_OUTPUT
+
+  # 3. Notification Slack avec météo GIF
+  slack-notify:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Choisir le GIF météo
+        id: pick_gif
+        run: |
+          if [[ "${{ needs.build-and-test.outputs.status }}" == "success" ]]; then
+            echo "gif_url=https://media.giphy.com/media/OkJat1YNdoD3W/giphy.gif" >> $GITHUB_OUTPUT
+          else
+            echo "gif_url=https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif" >> $GITHUB_OUTPUT
+          fi
+      - name: Envoyer la notification sur Slack
+        uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
             {
-              "text": "☀️ Tous les tests ont passé!",
+              "text": "🌡️ *Météo des tests* : `${{ needs.build-and-test.outputs.status }}`",
               "attachments": [
                 {
-                  "image_url": "https://media.giphy.com/media/XWXnf6hRiKBJS/giphy.gif"
+                  "image_url": "${{ steps.pick_gif.outputs.gif_url }}",
+                  "alt_text": "GIF météo des tests"
                 }
               ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-          
-      - name: La météo des tests - Échec
-        if: steps.run-tests.outcome != 'success'
-        uses: slackapi/slack-github-action@v1.24.0
+
+  # 4. Alien Code Review (commentaire aléatoire en cas d’échec des tests)
+  alien-review:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: needs.build-and-test.result == 'failure' && github.event_name == 'pull_request'
+    steps:
+      - name: Poster un commentaire Alien
+        uses: actions/github-script@v6
         with:
-          payload: |
-            {
-              "text": "⚡ Alerte! Certains tests ont échoué!",
-              "attachments": [
-                {
-                  "image_url": "https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif"
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      # Ajoute un commentaire alien 👽 en cas d'échec des tests
-      - name: Alien Code Review
-        if: steps.run-tests.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?
+          script: |
+            const phrases = [
+              "👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?",
+              "🛸 Mon vaisseau a détecté des failles logiques. Ajoute des tests pour sauver ta peau !",
+              "🌌 Ton code voyage dans une galaxie lointaine… sans tests. Corrige ça !"
+            ];
+            const body = phrases[Math.floor(Math.random() * phrases.length)];
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body
+            });
