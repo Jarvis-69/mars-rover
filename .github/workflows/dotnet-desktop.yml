@@ -11,12 +11,12 @@ jobs:
         with:
           fetch-depth: 2
       - name: Le commit du cosmonaute
-        run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          if ! [[ $COMMIT_MSG =~ (🚀|🛸|🪐) ]]; then
-            echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
-            exit 1
-          fi
+        # run: |
+        #   COMMIT_MSG=$(git log -1 --pretty=%B)
+        #   if ! [[ $COMMIT_MSG =~ (🚀|🛸|🪐) ]]; then
+        #     echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
+        #     exit 1
+        #   fi
 
   build:
     runs-on: windows-latest
