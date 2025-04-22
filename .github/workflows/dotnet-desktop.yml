@@ -1,47 +1,32 @@
 name: .NET CI
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  # 1) Vérifie que le message du dernier commit contient un emoji spatial (🚀, 🛸 ou 🪐)
+  # Vérifie que le message de commit contient un emoji spatial (🚀, 🛸 ou 🪐)
   commit-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout du dépôt avec tout l’historique
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - name: Déterminer la SHA à checker
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "COMMIT_REF=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-          else
-            echo "COMMIT_REF=${{ github.sha }}" >> $GITHUB_ENV
-          fi
-
+          fetch-depth: 2
       - name: Le commit du cosmonaute
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B "$COMMIT_REF")
-          if ! [[ "$COMMIT_MSG" =~ (🚀|🛸|🪐) ]]; then
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if ! echo "$COMMIT_MSG" | grep -q -E '🚀|🛸|🪐'; then
             echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
             exit 1
           fi
 
-  # 2) Build .NET, tests et notifications
   build:
     runs-on: windows-latest
     needs: commit-check
     steps:
       - uses: actions/checkout@v4
-
-      - name: Installer .NET 7.0
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 7.0.x
-
+      # Met en cache les packages NuGet pour accélérer les builds suivants
       - name: Cache NuGet packages
         uses: actions/cache@v3
         with:
@@ -49,16 +34,12 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-
-      - name: dotnet restore
-        run: dotnet restore
-
+      - run: dotnet restore
       - name: Test
         id: run-tests
         run: dotnet test
         continue-on-error: true
-
-      # Succès : GIF de soleil
+      # Envoie un GIF de soleil ☀️ ou d'orage ⚡ à Slack selon le résultat des tests
       - name: La météo des tests - Succès
         if: steps.run-tests.outcome == 'success'
         uses: slackapi/slack-github-action@v1.24.0
@@ -75,8 +56,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
-      # Échec : GIF d’orage
+          
       - name: La météo des tests - Échec
         if: steps.run-tests.outcome != 'success'
         uses: slackapi/slack-github-action@v1.24.0
@@ -93,8 +73,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
-      # En cas d’échec, on poste un commentaire Alien sur la PR
+      # Ajoute un commentaire alien 👽 en cas d'échec des tests
       - name: Alien Code Review
         if: steps.run-tests.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v3
