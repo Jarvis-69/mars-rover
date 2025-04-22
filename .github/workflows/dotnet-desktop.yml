@@ -40,16 +40,33 @@ jobs:
         run: dotnet test
         continue-on-error: true
       # Envoie un GIF de soleil ☀️ ou d'orage ⚡ à Slack selon le résultat des tests
-      - name: La météo des tests
-        if: always()
+      - name: La météo des tests - Succès
+        if: steps.run-tests.outcome == 'success'
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "${{ steps.run-tests.outcome == 'success' ? '☀️ Tous les tests ont passé!' : '⚡ Alerte! Certains tests ont échoué!' }}",
+              "text": "☀️ Tous les tests ont passé!",
               "attachments": [
                 {
-                  "image_url": "${{ steps.run-tests.outcome == 'success' ? 'https://media.giphy.com/media/XWXnf6hRiKBJS/giphy.gif' : 'https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif' }}"
+                  "image_url": "https://media.giphy.com/media/XWXnf6hRiKBJS/giphy.gif"
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+          
+      - name: La météo des tests - Échec
+        if: steps.run-tests.outcome != 'success'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "⚡ Alerte! Certains tests ont échoué!",
+              "attachments": [
+                {
+                  "image_url": "https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif"
                 }
               ]
             }
