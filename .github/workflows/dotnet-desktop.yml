@@ -1,45 +1,16 @@
 name: .NET CI
 
-on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - '**'
+on: [push, pull_request]
 
 jobs:
-  validate-commit-message:
-    name: 🔎 Valider le message de commit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Vérifier la présence d’un emoji spatial
-        shell: bash
-        run: |
-          MSG="$(git log -1 --pretty=%B)"
-          echo "Message de commit : $MSG"
-          if ! echo "$MSG" | grep -qE '🚀|👽|🪐'; then
-            echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀,👽,🪐)."
-            exit 1
-          fi
-
   build:
-    name: 🏗️ Build & Test
     runs-on: windows-latest
-    needs: validate-commit-message
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: 7.0.x
 
       - name: Cache NuGet packages
         uses: actions/cache@v3
@@ -52,74 +23,12 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Run tests
-        id: dotnet-test
-        run: |
-          if dotnet test; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-    test-weather:
-      name: 🌦️ La météo des tests
-      runs-on: ubuntu-latest
-      needs: build
-      if: always()
-      steps:
-        - name: Choisir le GIF et le message
-  -        id: météo
-  +        id: meteo
-          shell: bash
-          run: |
-            if [ "${{ needs.build.outputs.status }}" = "success" ]; then
-              GIF="https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif"
-              TEXTE="☀️ Tous les tests sont passés ! Bravo !"
-            else
-              GIF="https://media.giphy.com/media/l4EoZVMBY5J4S4xR2/giphy.gif"
-              TEXTE="⛈️ Oups, certains tests ont échoué…"
-            fi
-            echo "gif=$GIF" >> $GITHUB_OUTPUT
-            echo "texte=$TEXTE" >> $GITHUB_OUTPUT
-  
-        - name: Envoyer notification sur Slack
-          uses: 8398a7/action-slack@v3
-          with:
-            status: ${{ needs.build.result }}
-            fields: workflow,job,commit,repo,author
-            custom_payload: |
-              {
-                "text": "${{ steps.meteo.outputs.texte }}",
-                "attachments": [
-                  { "image_url": "${{ steps.meteo.outputs.gif }}" }
-                ]
-              }
-          env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-       
-
-  alien-code-review:
-    name: 👽 Alien Code Review
-    runs-on: ubuntu-latest
-    needs: build
-    if: failure()
-    steps:
-      - name: Générer un commentaire aléatoire
-        id: random-comment
+      - name: Run tests with emoji feedback
         shell: bash
         run: |
-          COMMENTS=(
-            "👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?"
-            "👾 Attention, j'ai détecté des perturbations dans ton code. Des tests aideraient !"
-            "🛸 Ce code a l'air d'être sorti d'une autre dimension. Ajoute des tests, stp !"
-          )
-          INDEX=$(( RANDOM % ${#COMMENTS[@]} ))
-          echo "comment=${COMMENTS[$INDEX]}" >> $GITHUB_OUTPUT
-
-      - name: Poster le commentaire sur la PR
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ steps.random-comment.outputs.comment }}
+          if dotnet test; then
+            echo "✅ Tous les tests ont réussi !"
+          else
+            echo "❌ Des tests ont échoué !"
+            exit 1
+          fi
