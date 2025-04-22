@@ -26,9 +26,31 @@ jobs:
       - name: Run tests with emoji feedback
         shell: bash
         run: |
-          if dotnet test; then
-            echo "✅ Tous les tests ont réussi !"
+          set +e
+          # Exécute les tests et capture la sortie
+          output=$(dotnet test 2>&1)
+          exit_code=$?
+
+          # Choix de l'emoji et du message selon le code de retour
+          if [ $exit_code -eq 0 ]; then
+            emoji="☀️"
+            message="Tous les tests ont réussi !"
           else
-            echo "❌ Des tests ont échoué !"
+            emoji="⛈️"
+            message="Des tests ont échoué !"
+          fi
+
+          # Affiche emoji + message
+          echo "${emoji}  ${message}"
+
+          # Vérifie qu'il y ait bien au moins un des deux emoji
+          if ! echo "${emoji}  ${message}" | grep -q '[☀️⛈️]'; then
+            echo "⚠️  Aucun emoji détecté dans la sortie !"
             exit 1
           fi
+
+          # Réaffiche les logs de dotnet test (optionnel)
+          echo "$output"
+
+          # Fait échouer le job si les tests ont échoué
+          exit $exit_code
