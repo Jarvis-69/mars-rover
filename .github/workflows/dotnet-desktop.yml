@@ -62,42 +62,42 @@ jobs:
             exit 1
           fi
 
-  test-weather:
-    name: 🌦️ La météo des tests
-    runs-on: ubuntu-latest
-    needs: build
-    if: always()
-    steps:
-      - name: Choisir le GIF et le message
-        id: météo
-        shell: bash
-        run: |
-          if [ "${{ needs.build.outputs.status }}" = "success" ]; then
-            GIF="https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif"
-            TEXTE="☀️ Tous les tests sont passés ! Bravo !"
-          else
-            GIF="https://media.giphy.com/media/l4EoZVMBY5J4S4xR2/giphy.gif"
-            TEXTE="⛈️ Oups, certains tests ont échoué…"
-          fi
-          echo "gif=$GIF" >> $GITHUB_OUTPUT
-          echo "texte=$TEXTE" >> $GITHUB_OUTPUT
-
-      - name: Envoyer notification sur Slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ needs.build.result }}
-          fields: workflow,job,commit,repo,author
-          custom_payload: |
-            {
-              "text": "${{ steps.météo.outputs.texte }}",
-              "attachments": [
-                {
-                  "image_url": "${{ steps.météo.outputs.gif }}"
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    test-weather:
+      name: 🌦️ La météo des tests
+      runs-on: ubuntu-latest
+      needs: build
+      if: always()
+      steps:
+        - name: Choisir le GIF et le message
+  -        id: météo
+  +        id: meteo
+          shell: bash
+          run: |
+            if [ "${{ needs.build.outputs.status }}" = "success" ]; then
+              GIF="https://media.giphy.com/media/26tPplGWjN0xLybiU/giphy.gif"
+              TEXTE="☀️ Tous les tests sont passés ! Bravo !"
+            else
+              GIF="https://media.giphy.com/media/l4EoZVMBY5J4S4xR2/giphy.gif"
+              TEXTE="⛈️ Oups, certains tests ont échoué…"
+            fi
+            echo "gif=$GIF" >> $GITHUB_OUTPUT
+            echo "texte=$TEXTE" >> $GITHUB_OUTPUT
+  
+        - name: Envoyer notification sur Slack
+          uses: 8398a7/action-slack@v3
+          with:
+            status: ${{ needs.build.result }}
+            fields: workflow,job,commit,repo,author
+            custom_payload: |
+              {
+                "text": "${{ steps.meteo.outputs.texte }}",
+                "attachments": [
+                  { "image_url": "${{ steps.meteo.outputs.gif }}" }
+                ]
+              }
+          env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+       
 
   alien-code-review:
     name: 👽 Alien Code Review
