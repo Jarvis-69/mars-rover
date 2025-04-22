@@ -3,8 +3,23 @@ name: .NET CI
 on: [push, pull_request]
 
 jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Le commit du cosmonaute
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if ! [[ $COMMIT_MSG =~ (🚀|🛸|🪐) ]]; then
+            echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
+            exit 1
+          fi
+
   build:
     runs-on: windows-latest
+    needs: commit-check
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -18,4 +33,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       - run: dotnet restore
-      - run: dotnet test
+      - name: Test
+        id: run-tests
+        run: dotnet test
+        continue-on-error: true
+      - name: La météo des tests
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.run-tests.outcome == 'success' ? '☀️ Tous les tests ont passé!' : '⚡ Alerte! Certains tests ont échoué!' }}",
+              "attachments": [
+                {
+                  "image_url": "${{ steps.run-tests.outcome == 'success' ? 'https://media.giphy.com/media/XWXnf6hRiKBJS/giphy.gif' : 'https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif' }}"
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      - name: Alien Code Review
+        if: steps.run-tests.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?
