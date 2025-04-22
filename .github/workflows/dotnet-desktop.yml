@@ -3,6 +3,7 @@ name: .NET CI
 on: [push, pull_request]
 
 jobs:
+  # Vérifie que le message de commit contient un emoji spatial (🚀, 🛸 ou 🪐)
   commit-check:
     runs-on: ubuntu-latest
     steps:
@@ -25,6 +26,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 7.0.x
+      # Met en cache les packages NuGet pour accélérer les builds suivants
       - name: Cache NuGet packages
         uses: actions/cache@v3
         with:
@@ -37,6 +39,7 @@ jobs:
         id: run-tests
         run: dotnet test
         continue-on-error: true
+      # Envoie un GIF de soleil ☀️ ou d'orage ⚡ à Slack selon le résultat des tests
       - name: La météo des tests
         if: always()
         uses: slackapi/slack-github-action@v1.24.0
@@ -53,6 +56,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      # Ajoute un commentaire alien 👽 en cas d'échec des tests
       - name: Alien Code Review
         if: steps.run-tests.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v3
