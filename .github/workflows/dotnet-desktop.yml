@@ -13,7 +13,9 @@ jobs:
       - name: Le commit du cosmonaute
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
-          if ! echo "$COMMIT_MSG" | grep -q -E '🚀|🛸|🪐'; then
+          if echo "$COMMIT_MSG" | grep -q -E '(🚀|🛸|🪐)'; then
+            echo "Emoji spatial trouvé dans le message de commit!"
+          else
             echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀, 🛸 ou 🪐)"
             exit 1
           fi
