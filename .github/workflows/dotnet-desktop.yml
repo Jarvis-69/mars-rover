@@ -23,8 +23,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      # ← Nouveau pas pour vérifier les vulnérabilités
+      # Nouveau pas pour vérifier les vulnérabilités
       - name: Vérifier les dépendances vulnérables
+        shell : bash
         run: |
           # On liste toutes les vulnérabilités (inclut aussi les transitives)
           dotnet list package --vulnerable --include-transitive > vuln.txt
