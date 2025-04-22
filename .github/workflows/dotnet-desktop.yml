@@ -1,33 +1,46 @@
-name: .NET CI amélioré
+name: .NET CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
-  # 1. Vérification du commit
-  check-commit:
+  validate-commit-message:
+    name: 🔎 Valider le message de commit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Vérifier le message de commit
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Vérifier la présence d’un emoji spatial
+        shell: bash
         run: |
-          # Récupère le message du dernier commit
           MSG="$(git log -1 --pretty=%B)"
-          echo "Message de commit : $MSG"
-          # Cherche un emoji spatial
+          echo "Message de commit : $MSG"
           if ! echo "$MSG" | grep -qE '🚀|👽|🪐'; then
             echo "::error::Le message de commit doit contenir au moins un emoji spatial (🚀,👽,🪐)."
             exit 1
           fi
 
-  # 2. Build & Test .NET
-  build-and-test:
-    needs: check-commit
+  build:
+    name: 🏗️ Build & Test
     runs-on: windows-latest
+    needs: validate-commit-message
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: '7.0.x'
+
       - name: Cache NuGet packages
         uses: actions/cache@v3
         with:
@@ -35,64 +48,9 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-      - run: dotnet restore
-      - name: Lancer les tests
-        id: run_tests
-        run: dotnet test --logger:"trx;LogFileName=test_results.trx"
-      # Expose le statut du job pour les étapes suivantes
-      - name: Définir le statut
-        if: ${{ always() }}
-        run: |
-          echo "status=${{ job.status }}" >> $GITHUB_OUTPUT
 
-  # 3. Notification Slack avec météo GIF
-  slack-notify:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Choisir le GIF météo
-        id: pick_gif
-        run: |
-          if [[ "${{ needs.build-and-test.outputs.status }}" == "success" ]]; then
-            echo "gif_url=https://media.giphy.com/media/OkJat1YNdoD3W/giphy.gif" >> $GITHUB_OUTPUT
-          else
-            echo "gif_url=https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif" >> $GITHUB_OUTPUT
-          fi
-      - name: Envoyer la notification sur Slack
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: |
-            {
-              "text": "🌡️ *Météo des tests* : `${{ needs.build-and-test.outputs.status }}`",
-              "attachments": [
-                {
-                  "image_url": "${{ steps.pick_gif.outputs.gif_url }}",
-                  "alt_text": "GIF météo des tests"
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Restore dependencies
+        run: dotnet restore
 
-  # 4. Alien Code Review (commentaire aléatoire en cas d’échec des tests)
-  alien-review:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: needs.build-and-test.result == 'failure' && github.event_name == 'pull_request'
-    steps:
-      - name: Poster un commentaire Alien
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const phrases = [
-              "👽 Humain, ton code est incompréhensible pour ma civilisation. Peux-tu ajouter des tests ?",
-              "🛸 Mon vaisseau a détecté des failles logiques. Ajoute des tests pour sauver ta peau !",
-              "🌌 Ton code voyage dans une galaxie lointaine… sans tests. Corrige ça !"
-            ];
-            const body = phrases[Math.floor(Math.random() * phrases.length)];
-            await github.rest.issues.createComment({
-              ...context.repo,
-              issue_number: context.issue.number,
-              body
-            });
+      - name: Run tests
+        run: dotnet test
