@@ -26,7 +26,7 @@ public class RoverTest
         var rover = new Rover(3, 4, Direction.North);
 
         Assert.Equal(
-            new Coordinates(3, 4, Direction.North),
+            new Coordinates(3, 5, Direction.North),
             rover.Advance().Coordinates
         );
     }

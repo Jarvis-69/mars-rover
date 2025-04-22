@@ -23,6 +23,21 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      # ← Nouveau pas pour vérifier les vulnérabilités
+      - name: Vérifier les dépendances vulnérables
+        run: |
+          # On liste toutes les vulnérabilités (inclut aussi les transitives)
+          dotnet list package --vulnerable --include-transitive > vuln.txt
+
+          # Si on trouve la section "The following vulnerable packages were found"
+          if grep -q "Following vulnerable packages were found" vuln.txt; then
+            echo "❌ Des dépendances vulnérables ont été détectées :"
+            cat vuln.txt
+            exit 1
+          else
+            echo "✅ Aucune dépendance vulnérable détectée."
+          fi
+
       - name: Run tests with emoji feedback
         shell: bash
         run: |
