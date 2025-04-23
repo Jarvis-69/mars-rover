@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: myapp-db
+    environment:
+      POSTGRES_USER: myappuser
+      POSTGRES_PASSWORD: myapppassword
+      POSTGRES_DB: myappdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myappuser -d myappdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend # Chemin vers le Dockerfile du backend
+    container_name: myapp-backend
+    depends_on:
+      db:
+        condition: service_healthy # Attend que la BDD soit prête
+    environment:
+      DB_HOST: db # Nom du service BDD
+      DB_PORT: 5432
+      DB_USER: myappuser
+      DB_PASSWORD: myapppassword
+      DB_NAME: myappdb
+      PORT: 5000 # Port sur lequel le backend écoute DANS le conteneur
+    ports:
+      - "5000:5000" # Mappe port hôte 5000 vers port conteneur 5000
+    networks:
+      - app-net
+    volumes:
+      # Monte le code source pour le développement (live reload si configuré)
+      - ./backend:/app
+      # Empêche node_modules local de masquer celui du conteneur
+      - /app/node_modules
+
+  frontend:
+    build: ./frontend # Chemin vers le Dockerfile du frontend
+    container_name: myapp-frontend
+    depends_on:
+      - backend # Attend que le backend démarre (pas forcément prêt)
+    ports:
+      - "3000:3000" # Mappe port hôte 3000 vers port conteneur 3000 (React dev server)
+    networks:
+      - app-net
+    environment:
+      # L'URL que le code React (dans le navigateur) utilisera pour joindre l'API
+      # Utilise localhost car la requête vient du navigateur de l'hôte
+      - REACT_APP_API_URL=http://localhost:5000
+    volumes:
+      # Monte le code source pour le développement (live reload React)
+      - ./frontend:/app
+      # Empêche node_modules local de masquer celui du conteneur
+      - /app/node_modules
+    # Nécessaire pour que le serveur de développement React fonctionne correctement
+    stdin_open: true
+    tty: true
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

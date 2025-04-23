@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine  # Utilisation d'une image PostgreSQL légère
+    container_name: ma_base_de_donnees
+    environment:
+      # Variables d'environnement injectées dans le conteneur 'db'
+      POSTGRES_USER: mon_utilisateur      # Nom d'utilisateur pour la BDD
+      POSTGRES_PASSWORD: mon_mot_de_passe # Mot de passe pour la BDD
+      POSTGRES_DB: ma_bdd             # Nom de la base de données à créer
+    networks:
+      - app-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Volume pour persister les données
+    healthcheck:
+      # Vérifie si PostgreSQL est prêt à accepter des connexions
+      test: ["CMD-SHELL", "pg_isready -U mon_utilisateur -d ma_bdd"]
+      interval: 10s  # Vérifier toutes les 10 secondes
+      timeout: 5s    # Considérer comme échoué après 5 secondes
+      retries: 5     # Essayer 5 fois avant de marquer comme 'unhealthy'
+
+  app:
+    build:
+      context: . # Le contexte est le répertoire contenant ce docker-compose.yml et le Dockerfile.app
+      dockerfile: Dockerfile.app # Nom du Dockerfile pour l'application
+    container_name: mon_app_check
+    depends_on:
+      db:
+        condition: service_healthy # Attend que le healthcheck de 'db' soit 'healthy'
+    environment:
+      # Variables d'environnement injectées dans le conteneur 'app'
+      DB_HOST: db                 # Nom du service 'db' (résolu par Docker Compose)
+      DB_PORT: 5432               # Port par défaut de PostgreSQL
+      DB_NAME: ma_bdd             # Doit correspondre à POSTGRES_DB
+      DB_USER: mon_utilisateur      # Doit correspondre à POSTGRES_USER
+      DB_PASSWORD: mon_mot_de_passe # Doit correspondre à POSTGRES_PASSWORD
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge # Réseau de type bridge par défaut
+
+volumes:
+  postgres_data: # Définit le volume nommé pour la persistance

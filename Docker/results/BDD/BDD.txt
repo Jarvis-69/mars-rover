@@ -1,0 +1,71 @@
+docker-compose logs app
+
+time="2025-04-23T12:07:14+02:00" level=warning msg="C:\\Users\\joris\\mars-rover\\Docker\\docker-compose
+.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"                                                                                                   mon_app_check  | Tentative de connexion à la base de données sur db:5432...
+mon_app_check  | Connexion à la base de données réussie !
+mon_app_check  | Le conteneur 'app' a vérifié avec succès la connexion à la base de données.
+
+//-----------------------------------------------------------------------------------------------------//
+
+docker-compose logs db
+
+time="2025-04-23T12:07:26+02:00" level=warning msg="C:\\Users\\joris\\mars-rover\\Docker\\docker-compose
+.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"                                                                                                   ma_base_de_donnees  | The files belonging to this database system will be owned by user "postgres".
+ma_base_de_donnees  | This user must also own the server process.
+ma_base_de_donnees  |
+ma_base_de_donnees  | The database cluster will be initialized with locale "en_US.utf8".
+ma_base_de_donnees  | The default database encoding has accordingly been set to "UTF8".
+ma_base_de_donnees  | The default text search configuration will be set to "english".
+ma_base_de_donnees  |
+ma_base_de_donnees  | Data page checksums are disabled.
+ma_base_de_donnees  |
+ma_base_de_donnees  | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+ma_base_de_donnees  | creating subdirectories ... ok
+ma_base_de_donnees  | selecting dynamic shared memory implementation ... posix
+ma_base_de_donnees  | selecting default max_connections ... 100
+ma_base_de_donnees  | selecting default shared_buffers ... 128MB
+ma_base_de_donnees  | selecting default time zone ... UTC
+ma_base_de_donnees  | creating configuration files ... ok
+ma_base_de_donnees  | running bootstrap script ... ok
+ma_base_de_donnees  | sh: locale: not found
+ma_base_de_donnees  | 2025-04-23 10:06:35.587 UTC [35] WARNING:  no usable system locales were found    
+ma_base_de_donnees  | performing post-bootstrap initialization ... ok
+ma_base_de_donnees  | initdb: warning: enabling "trust" authentication for local connections
+ma_base_de_donnees  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, o
+r --auth-local and --auth-host, the next time you run initdb.                                           ma_base_de_donnees  | syncing data to disk ... ok
+ma_base_de_donnees  |
+ma_base_de_donnees  |
+ma_base_de_donnees  | Success. You can now start the database server using:
+ma_base_de_donnees  |
+ma_base_de_donnees  |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+ma_base_de_donnees  |
+ma_base_de_donnees  | waiting for server to start....2025-04-23 10:06:36.998 UTC [41] LOG:  starting Pos
+tgreSQL 15.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit                   ma_base_de_donnees  | 2025-04-23 10:06:37.006 UTC [41] LOG:  listening on Unix socket "/var/run/postgres
+ql/.s.PGSQL.5432"                                                                                       ma_base_de_donnees  | 2025-04-23 10:06:37.031 UTC [44] LOG:  database system was shut down at 2025-04-23
+ 10:06:36 UTC                                                                                           ma_base_de_donnees  | 2025-04-23 10:06:37.045 UTC [41] LOG:  database system is ready to accept connecti
+ons                                                                                                     ma_base_de_donnees  |  done
+ma_base_de_donnees  | server started
+ma_base_de_donnees  | CREATE DATABASE
+ma_base_de_donnees  |
+ma_base_de_donnees  |
+ma_base_de_donnees  | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*       
+ma_base_de_donnees  |
+ma_base_de_donnees  | waiting for server to shut down...2025-04-23 10:06:37.223 UTC [41] LOG:  received 
+fast shutdown request                                                                                   ma_base_de_donnees  | .2025-04-23 10:06:37.232 UTC [41] LOG:  aborting any active transactions
+ma_base_de_donnees  | 2025-04-23 10:06:37.235 UTC [41] LOG:  background worker "logical replication laun
+cher" (PID 47) exited with exit code 1                                                                  ma_base_de_donnees  | 2025-04-23 10:06:37.235 UTC [42] LOG:  shutting down
+ma_base_de_donnees  | 2025-04-23 10:06:37.243 UTC [42] LOG:  checkpoint starting: shutdown immediate    
+ma_base_de_donnees  | 2025-04-23 10:06:37.449 UTC [42] LOG:  checkpoint complete: wrote 920 buffers (5.6
+%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.064 s, sync=0.115 s, total=0.214 s; sync files=301, longest=0.013 s, average=0.001 s; distance=4233 kB, estimate=4233 kB                                ma_base_de_donnees  | 2025-04-23 10:06:37.463 UTC [41] LOG:  database system is shut down
+ma_base_de_donnees  |  done
+ma_base_de_donnees  | server stopped
+ma_base_de_donnees  |
+ma_base_de_donnees  | PostgreSQL init process complete; ready for start up.
+ma_base_de_donnees  |
+ma_base_de_donnees  | 2025-04-23 10:06:37.587 UTC [1] LOG:  starting PostgreSQL 15.12 on x86_64-pc-linux
+-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit                                                   ma_base_de_donnees  | 2025-04-23 10:06:37.588 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 54
+32                                                                                                      ma_base_de_donnees  | 2025-04-23 10:06:37.588 UTC [1] LOG:  listening on IPv6 address "::", port 5432   
+ma_base_de_donnees  | 2025-04-23 10:06:37.603 UTC [1] LOG:  listening on Unix socket "/var/run/postgresq
+l/.s.PGSQL.5432"                                                                                        ma_base_de_donnees  | 2025-04-23 10:06:37.624 UTC [57] LOG:  database system was shut down at 2025-04-23
+ 10:06:37 UTC                                                                                           ma_base_de_donnees  | 2025-04-23 10:06:37.637 UTC [1] LOG:  database system is ready to accept connectio
+ns                                                                                                      

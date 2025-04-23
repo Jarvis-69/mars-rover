@@ -1,0 +1,62 @@
+PS C:\Users\joris\mars-rover\Docker\Boss_Final> docker-compose up -d --build
+time="2025-04-23T12:24:26+02:00" level=warning msg="C:\\Users\\joris\\mars-rover\\Docker\\Boss_Final\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[+] Running 1/1
+ ✔ db Pulled                                                                                                                                                        2.1s 
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+[+] Building 192.4s (20/20) FINISHED                                                                                                                docker:desktop-linux
+ => [backend internal] load build definition from Dockerfile                                                                                                        0.1s
+ => => transferring dockerfile: 422B                                                                                                                                0.0s
+ => [frontend internal] load metadata for docker.io/library/node:18-alpine                                                                                          2.1s
+ => [backend auth] library/node:pull token for registry-1.docker.io                                                                                                 0.0s
+ => [backend internal] load .dockerignore                                                                                                                           0.1s
+ => => transferring context: 2B                                                                                                                                     0.0s
+ => [frontend 1/5] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e                                    6.5s
+ => => resolve docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e                                             0.1s
+ => => sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e 40.01MB / 40.01MB                                                                    2.9s
+ => => sha256:25ff2da83641908f65c3a74d80409d6b1b62ccfaab220b9ea70b80df5a2e0549 446B / 446B                                                                          0.4s
+ => => sha256:1e5a4c89cee5c0826c540ab06d4b6b491c96eda01837f430bd47f0d26702d6e3 1.26MB / 1.26MB                                                                      0.7s
+ => => extracting sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e                                                                           3.2s
+ => => extracting sha256:1e5a4c89cee5c0826c540ab06d4b6b491c96eda01837f430bd47f0d26702d6e3                                                                           0.1s
+ => => extracting sha256:25ff2da83641908f65c3a74d80409d6b1b62ccfaab220b9ea70b80df5a2e0549                                                                           0.0s
+ => [backend internal] load build context                                                                                                                           0.1s
+ => => transferring context: 2.56kB                                                                                                                                 0.0s
+ => CACHED [frontend 2/5] WORKDIR /app                                                                                                                              0.2s
+ => [backend 3/5] COPY package*.json ./                                                                                                                             0.1s
+ => [backend 4/5] RUN npm install                                                                                                                                   8.1s 
+ => [backend 5/5] COPY . .                                                                                                                                          0.1s
+ => [backend] exporting to image                                                                                                                                    3.2s
+ => => exporting layers                                                                                                                                             1.2s
+ => => exporting manifest sha256:66f2f72c3409fbcd2d8d0b45f80c2c460cfadcf519c8214fed92fcfae2504a46                                                                   0.0s
+ => => exporting config sha256:1933b17b7b49a3dadfa42c9f6d8879278b60636bae8f0e439d2755ca5d06e6a6                                                                     0.0s 
+ => => exporting attestation manifest sha256:679dd1edc2d0575c061309fa00c20d3ba1f743c4775ba5f82d64adce343350d0                                                       0.0s 
+ => => exporting manifest list sha256:7f4f6d3a9d7316db54be9be0e4cf8575ef8aceee3f476c4ad266ed4b0be75f24                                                              0.0s 
+ => => naming to docker.io/library/boss_final-backend:latest                                                                                                        0.0s 
+ => => unpacking to docker.io/library/boss_final-backend:latest                                                                                                     1.7s 
+ => [backend] resolving provenance for metadata file                                                                                                                0.0s 
+ => [frontend internal] load build definition from Dockerfile                                                                                                       0.2s 
+ => => transferring dockerfile: 585B                                                                                                                                0.1s 
+ => [frontend internal] load .dockerignore                                                                                                                          0.1s 
+ => => transferring context: 2B                                                                                                                                     0.0s 
+ => [frontend internal] load build context                                                                                                                         33.5s 
+ => => transferring context: 237.91MB                                                                                                                              33.2s 
+ => [frontend 3/5] COPY package*.json ./                                                                                                                            0.6s 
+ => [frontend 4/5] RUN npm install                                                                                                                                 55.6s 
+ => [frontend 5/5] COPY . .                                                                                                                                        14.6s 
+ => [frontend] exporting to image                                                                                                                                  66.3s 
+ => => exporting layers                                                                                                                                            23.4s 
+ => => exporting manifest sha256:5870ddef95b6c8fbeff4cea52f094f4bdb695f6d2d970eeeaaf6c1eb7c24f946                                                                   0.0s 
+ => => exporting config sha256:52cbfa5ec4fdefec80604b866e7fa3a12c5031b02dcdf4fd0cbaff2a4649b336                                                                     0.0s 
+ => => exporting attestation manifest sha256:8a3da0723c5a67dcef88c19095939d3e68c6899212a934dc4a696ae31cb9ed09                                                       0.1s 
+ => => exporting manifest list sha256:c29863ed228da4cf68dc3fdd0b5fc72432d1483a576672db27d48f2ef957c841                                                              0.0s 
+ => => naming to docker.io/library/boss_final-frontend:latest                                                                                                       0.0s 
+ => => unpacking to docker.io/library/boss_final-frontend:latest                                                                                                   42.5s 
+ => [frontend] resolving provenance for metadata file                                                                                                               0.1s 
+[+] Running 7/7
+ ✔ backend                            Built                                                                                                                         0.0s 
+ ✔ frontend                           Built                                                                                                                         0.0s 
+ ✔ Network boss_final_app-net         Created                                                                                                                       0.2s 
+ ✔ Volume "boss_final_postgres_data"  Created                                                                                                                       0.1s 
+ ✔ Container myapp-db                 Healthy                                                                                                                      27.0s 
+ ✔ Container myapp-backend            Started                                                                                                                      26.8s 
+ ✔ Container myapp-frontend           Started                 

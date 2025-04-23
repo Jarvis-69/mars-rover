@@ -1,0 +1,11 @@
+docker exec container1 ping -c 4 container2
+
+PING container2 (172.18.0.3): 56 data bytes
+64 bytes from 172.18.0.3: seq=0 ttl=64 time=0.613 ms
+64 bytes from 172.18.0.3: seq=1 ttl=64 time=0.097 ms
+64 bytes from 172.18.0.3: seq=2 ttl=64 time=0.098 ms
+64 bytes from 172.18.0.3: seq=3 ttl=64 time=0.087 ms
+
+--- container2 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.087/0.223/0.613 ms

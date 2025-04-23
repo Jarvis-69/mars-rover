@@ -1,88 +1,135 @@
-# Docker Image Creation and Vulnerability Auditing
+# Création d'Images Docker et Audit de Vulnérabilités
+Ce document décrit les étapes pour créer trois images Docker différentes et les auditer pour les vulnérabilités en utilisant Docker Scout.
 
-This document outlines the steps to create three different Docker images and audit them for vulnerabilities using Docker Scout.
 
-## 1. Image with `curl`
+## 1. Image avec `curl`
+Cette image installe `curl` et exécute `curl google.com` lors de son lancement.
 
-This image installs `curl` and executes `curl google.com` upon running.
-
-**Build the image:**
+**Construire l'image :**
 ```bash
+# Construire l'image :
 docker build -t curl-image -f Dockerfile.curl .
 ```
 
-**Run the container:**
+**Lancer le conteneur :**
 ```bash
+# Lancer le conteneur :
 docker run --rm curl-image
 ```
 
-## 2. Image Serving Static HTML
 
-This image uses Nginx to serve a simple static HTML page.
+## 2. Image Servant du HTML Statique
+Cette image utilise Nginx pour servir une simple page HTML statique.
 
-**Build the image:**
+**Construire l'image :**
 ```bash
+# Construire l'image :
 docker build -t static-html-image -f Dockerfile.nginx .
 ```
 
-**Run the container:**
+**Lancer le conteneur :**
 ```bash
-# Runs in detached mode, maps host port 8080 to container port 80
+# S'exécute en mode détaché, mappe le port hôte 8080 au port 80 du conteneur
 docker run --rm -d -p 8080:80 static-html-image
 ```
-*Access the page at `http://localhost:8080` in your browser.*
+*Accédez à la page via `http://localhost:8080` dans votre navigateur.*
 
-## 3. Image with a Basic Python Web Server
 
-This image runs a simple web server written in Python using the built-in `http.server` module.
+## 3. Image avec un Serveur Web Python Basique
+Cette image exécute un serveur web simple écrit en Python en utilisant le module intégré `http.server`.
 
-**Build the image:**
+**Construire l'image :**
 ```bash
-# Create the dummy web/index.html first by running server.py locally once
-# or manually create the web directory and an index.html file inside it.
-# Then build:
+# Créez d'abord le fichier factice web/index.html en exécutant server.py localement une fois
+# ou créez manuellement le répertoire web et un fichier index.html à l'intérieur.
+# Puis construisez :
 docker build -t python-server -f Dockerfile.python .
 ```
 
-**Run the container:**
+**Lancer le conteneur :**
 ```bash
-# Runs in detached mode, maps host port 8001 to container port 8000
+# S'exécute en mode détaché, mappe le port hôte 8001 au port 8000 du conteneur
 docker run --rm -d -p 8001:8000 python-server
 ```
-*Access the server at `http://localhost:8001` in your browser.*
+*Accédez au serveur via `http://localhost:8001` dans votre navigateur.*
 
-## 4. Auditing Vulnerabilities with Docker Scout
 
-Docker Scout helps identify Common Vulnerabilities and Exposures (CVEs) in your Docker images.
+## 4. Audit des Vulnérabilités avec Docker Scout
+Docker Scout aide à identifier les Vulnérabilités et Expositions Communes (CVEs) dans vos images Docker.
 
-**Prerequisites:**
-*   Docker Desktop with Docker Scout enabled or Docker Engine with the `docker scout` CLI plugin installed.
-*   Log in to Docker Hub (`docker login`). Docker Scout might require a Docker Pro, Team, or Business subscription for advanced features or frequent use, but basic CVE scanning is often available.
-
-**Audit an image (e.g., the Python server image):**
+**Auditer une image (ex: l'image du serveur Python) :**
 ```bash
-# Ensure the image is built, e.g., python-server
+# Assurez-vous que l'image est construite, par ex., python-server
 docker scout cves python-server
 ```
 
-**Interpreting Results:**
-Docker Scout will list vulnerabilities found in the image layers, often categorized by severity (Critical, High, Medium, Low). It shows the vulnerable package, version, and the fixed version if available.
+**Corriger les Vulnérabilités (Exemple : `python-server`) :**
 
-**Addressing Vulnerabilities (Example: `python-server`):**
+1.  **Exécuter l'audit :** `docker scout cves python-server`
+2.  **Reconstruire :** `docker build -t python-server -f Dockerfile.python .`
+3.  **Ré-auditer :** `docker scout cves python-server`. Comparez les résultats.
 
-1.  **Run the audit:** `docker scout cves python-server`
-2.  **Analyze:** Look for vulnerabilities, especially High and Critical ones. Note the affected packages (e.g., `openssl`, `python`, base OS packages).
-3.  **Update Base Image:** The easiest fix is often using the *latest patch version* of your chosen base image tag (e.g., `python:3.11.x-slim` instead of just `python:3.11-slim`, although `slim` tags are usually updated). Check Docker Hub for the latest available tags. Modify the `FROM` line in `Dockerfile.python`.
-4.  **Update OS Packages:** If vulnerabilities persist in OS packages, add commands to update them *after* the `FROM` line and *before* copying application code.
-    ```dockerfile
-    FROM python:3.11-slim
-    # Update packages (example for Debian/Ubuntu based slim images)
-    RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
-    WORKDIR /app
-    # ... rest of Dockerfile
-    ```
-5.  **Rebuild:** `docker build -t python-server -f Dockerfile.python .`
-6.  **Re-audit:** `docker scout cves python-server`. Compare results.
-7.  **Consider Multi-stage Builds:** For production applications, use multi-stage builds. One stage builds the app (including dev dependencies), and a final *minimal* stage copies only the necessary runtime files and dependencies, significantly reducing the attack surface.
 
-By iteratively updating base images and packages, you can reduce the number of known vulnerabilities reported by Docker Scout.
+## 5. Communication entre Conteneurs via un Réseau Personnalisé
+Docker permet de créer des réseaux personnalisés pour isoler et permettre la communication entre les conteneurs par leur nom.
+
+**1. Créer un réseau Docker personnalisé :**
+```bash
+# Crée un réseau de type bridge nommé 'mon-reseau'
+docker network create mon-reseau
+
+# Lancer le premier conteneur
+docker run -d --rm --name container1 --network mon-reseau alpine sleep infinity
+
+# Lancer le second conteneur
+docker run -d --rm --name container2 --network mon-reseau alpine sleep infinity
+
+# Exécuter 'ping container2' depuis 'container1'
+docker exec container1 ping -c 4 container2
+
+# Arrêter les conteneurs
+docker stop container1 container2
+
+# Supprimer le réseau (les conteneurs doivent être arrêtés ou déconnectés d'abord)
+docker network rm mon-reseau
+```
+
+
+## 6. Utilisation de Docker Compose pour Base de Données et Application
+Docker Compose simplifie la gestion d'applications multi-conteneurs. Cet exemple lance un service de base de données PostgreSQL (`db`) et une application Python (`app`) qui vérifie la connexion à la base de données.
+
+**Fichiers requis :**
+
+*   `docker-compose.yml` : Définit les services, réseaux, volumes, variables d'environnement et health check.
+*   `check_db.py` : Script Python pour l'application `app` qui tente de se connecter à la BDD.
+*   `requirements.txt` : Liste les dépendances Python (ex: `psycopg2-binary`).
+*   `Dockerfile.app` : Instructions pour construire l'image Docker de l'application `app`.
+
+**Lancer les services :**
+
+```bash
+# Construit les images (si nécessaire) et démarre les conteneurs en arrière-plan
+docker-compose up -d
+
+# Afficher les logs du conteneur 'app'
+docker-compose logs app
+
+# Afficher les logs du conteneur 'db'
+docker-compose logs db
+
+# Arrête et supprime les conteneurs, réseaux et volumes définis dans le compose file
+docker-compose down -v
+```
+
+
+## 7. Exemple Complet avec Docker Compose (DB, Backend, Frontend)
+Cet exemple montre comment conteneuriser une application web complète avec une base de données PostgreSQL, une API backend Node.js/Express, et une interface frontend React.
+
+**Lancer l'Application Complète :**
+
+```bash
+# Se placer dans le répertoire Boss_Final/
+cd c:\Users\joris\mars-rover\Docker\Boss_Final
+
+# Construire les images et démarrer tous les services en arrière-plan
+docker-compose up -d --build
