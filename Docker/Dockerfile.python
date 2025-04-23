@@ -1,0 +1,58 @@
+# V2, check audit
+
+# Use an Alpine based image for minimal size and vulnerabilities
+FROM python:3.13-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Update OS packages using apk and clean up cache
+# Also upgrade pip and setuptools
+# Note: Alpine images are minimal, upgrade might not find much, but it's good practice.
+# Use --no-cache to avoid storing the apk index locally
+RUN apk update && \
+    apk upgrade --no-cache && \
+    pip install --no-cache-dir --upgrade pip setuptools
+    # No need for rm -rf /var/lib/apt/lists/* as apk --no-cache handles cleanup
+
+# Create a directory to serve files from (optional)
+# This step might be redundant if COPY creates it, but explicit is fine.
+RUN mkdir web
+
+# Copy the Python server script and web content
+COPY server.py .
+COPY web /app/web
+
+# Expose the port the server runs on
+EXPOSE 8000
+
+# Command to run the Python server
+CMD ["python", "server.py"]
+
+
+# --------------------------------------------------------------------------------------------
+# V1 version, Check audit 
+
+# # Use a specific, recent Python slim image for better security baseline
+# FROM python:3.11-slim
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Create a directory to serve files from (optional)
+# RUN mkdir web
+
+# # Copy the Python server script and web content
+# # Assurez-vous que le fichier server.py existe
+# COPY server.py .
+# # Assurez-vous que le dossier web et son contenu (ex: index.html) existent
+# COPY web /app/web
+
+# # Install dependencies if any (none for this simple server)
+# # RUN pip install --no-cache-dir -r requirements.txt
+
+# # Expose the port the server runs on
+# EXPOSE 8000
+
+# # Command to run the Python server
+# CMD ["python", "server.py"]

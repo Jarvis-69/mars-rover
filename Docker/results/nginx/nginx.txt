@@ -1,0 +1,4 @@
+docker run --rm -d -p 8080:80 static-html-image
+
+0e662e92e187a0a88d95a9346fd357f3bb63a972b3301dc8f5bd3f355fbbd9dd
+

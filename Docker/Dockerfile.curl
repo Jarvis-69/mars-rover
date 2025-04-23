@@ -1,0 +1,8 @@
+# Use a minimal base image
+FROM alpine:latest
+
+# Install curl
+RUN apk update && apk add --no-cache curl
+
+# Command to run when the container starts
+CMD ["curl", "google.com"]

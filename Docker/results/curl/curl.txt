@@ -1,0 +1,11 @@
+docker run --rm curl-image
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0<HTML><HEAD><meta http-equiv="content-type" conte
+nt="text/html;charset=utf-8">                                                                                                  <TITLE>301 Moved</TITLE></HEAD><BODY>
+<H1>301 Moved</H1>
+The document has moved
+<A HREF="http://www.google.com/">here</A>.
+</BODY></HTML>
+100   219  100   219    0     0   2417      0 --:--:-- --:--:-- --:--:--  2433

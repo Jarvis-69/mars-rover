@@ -1,0 +1,9 @@
+# Use the official Nginx image
+FROM nginx:alpine
+
+# Copy the static HTML file to the default Nginx public directory
+# Assurez-vous que le fichier index.html existe dans le même dossier
+COPY index.html /usr/share/nginx/html/index.html
+
+# Expose port 80
+EXPOSE 80
